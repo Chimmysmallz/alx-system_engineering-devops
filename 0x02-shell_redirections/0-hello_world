@@ -1,2 +1,2 @@
 #!/bin/bash
-Hello, World
+Printf "Hello, World\n"' >> 0-hello_world
