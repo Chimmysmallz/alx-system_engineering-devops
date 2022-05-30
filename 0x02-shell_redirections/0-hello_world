@@ -1,2 +1,2 @@
-#!/bash/bin
-0-hello_world
+#!/bin/bash
+Hello, World
