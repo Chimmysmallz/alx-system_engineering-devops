@@ -1,29 +1,18 @@
 #!/usr/bin/python3
+"""Exports to-do list information of all employees to JSON format."""
 import json
 import requests
-from sys import argv
-"""
-accessing a url with employee ID to return information
-"""
-
 
 if __name__ == "__main__":
-    users = requests.get("https://jsonplaceholder.typicode.com/users",
-                         verify=False).json()
-    todo = requests.get("https://jsonplaceholder.typicode.com/todos",
-                        verify=False).json()
-    user_dict = {}
-    usernamedict = {}
-    for user in users:
-        ID = user.get("id")
-        user_dict[ID] = []
-        usernamedict[ID] = user.get('username')
-    for task in todo:
-        task_dict = {}
-        ID = task.get("userId")
-        task_dict["task"] = task.get('title')
-        task_dict["completed"] = task.get('completed')
-        task_dict['username'] = usernamedict.get(ID)
-        user_dict.get(ID).append(task_dict)
-    with open("todo_all_employees.json", 'w') as jsfile:
-        json.dump(user_dict, jsfile)
+    url = "https://jsonplaceholder.typicode.com/"
+    users = requests.get(url + "users").json()
+
+    with open("todo_all_employees.json", "w") as jsonfile:
+        json.dump({
+            u.get("id"): [{
+                "task": t.get("title"),
+                "completed": t.get("completed"),
+                "username": u.get("username")
+            } for t in requests.get(url + "todos",
+                                    params={"userId": u.get("id")}).json()]
+            for u in users}, jsonfile)
