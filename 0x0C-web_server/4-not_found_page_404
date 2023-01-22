@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# Sets up a brand new nginx server with a redirect page.
-sudo apt-get update
-sudo apt-get install -y nginx
-sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
-echo -e "Ceci n'est pas une page\n" | sudo tee /usr/share/nginx/html/404.html
-sudo sed -i 's|#error_page 404 \/404.html|error_page 404 \/404.html|' /etc/nginx/sites-available/default
-sudo service nginx start 
+# creates custom 404 html page contaning a string
+echo "Ceci n'est pas une page" | sudo tee /var/www/html/error404.html
+sudo sed -i "47s|.*| \n\terror_page 404 /error404.html;\n|" /etc/nginx/sites-enabled/default
+sudo /etc/init.d/nginx restart
