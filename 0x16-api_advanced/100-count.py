@@ -1,44 +1,63 @@
 #!/usr/bin/python3
-import requests
-import sys
-"""
-Module to interface with the reddit api
-"""
+""" Module for storing the count_words function. """
+from requests import get
 
 
-def count_words(subreddit, word_list=[], after=None, all_results=[]):
+def count_words(subreddit, word_list, word_count=[], page_after=None):
     """
-    Uses the reddit api to get a count of search terms from subreddit hot posts
+    Prints the count of the given words present in the title of the
+    subreddit's hottest articles.
     """
-    param = {}
-    new_after = None
-    if after is not None:
-        param = {'after': after}
-    url = 'https://reddit.com/r/' + subreddit + '/hot/.json'
-    headers = {'User-Agent': "lala"}
-    try:
-        r = requests.get(url, headers=headers, params=param)
-        new_after = r.json()['data'].get('after')
-        for data in r.json()['data'].get('children'):
-            all_results.append(data['data'].get('title'))
-    except:
-        return(None)
-    if new_after is not None:
-        return(count_words(subreddit, word_list, new_after, all_results))
-    else:
-        word_dict = dict.fromkeys((word_list.lower()), 0)
-        line = ""
-        for item in all_results:
-            line = item.lower()
-            for word in word_list:
-                if word in line:
-                    word_dict[word] += 1
-        for key in word_dict:
-            print("{:s}: {:d}".format(key, word_dict[key]))
-        return(all_results)
+    headers = {'User-Agent': 'HolbertonSchool'}
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Please pass an argument for the subreddit to search.")
+    word_list = [word.lower() for word in word_list]
+
+    if bool(word_count) is False:
+        for word in word_list:
+            word_count.append(0)
+
+    if page_after is None:
+        url = 'https://www.reddit.com/r/{}/hot.json'.format(subreddit)
+        r = get(url, headers=headers, allow_redirects=False)
+        if r.status_code == 200:
+            for child in r.json()['data']['children']:
+                i = 0
+                for i in range(len(word_list)):
+                    for word in [w for w in child['data']['title'].split()]:
+                        word = word.lower()
+                        if word_list[i] == word:
+                            word_count[i] += 1
+                    i += 1
+
+            if r.json()['data']['after'] is not None:
+                count_words(subreddit, word_list,
+                            word_count, r.json()['data']['after'])
     else:
-        print(len(count_words(sys.argv[1], [x for x in sys.argv[2].split()])))
+        url = ('https://www.reddit.com/r/{}/hot.json?after={}'
+               .format(subreddit,
+                       page_after))
+        r = get(url, headers=headers, allow_redirects=False)
+
+        if r.status_code == 200:
+            for child in r.json()['data']['children']:
+                i = 0
+                for i in range(len(word_list)):
+                    for word in [w for w in child['data']['title'].split()]:
+                        word = word.lower()
+                        if word_list[i] == word:
+                            word_count[i] += 1
+                    i += 1
+            if r.json()['data']['after'] is not None:
+                count_words(subreddit, word_list,
+                            word_count, r.json()['data']['after'])
+            else:
+                dicto = {}
+                for key_word in list(set(word_list)):
+                    i = word_list.index(key_word)
+                    if word_count[i] != 0:
+                        dicto[word_list[i]] = (word_count[i] *
+                                               word_list.count(word_list[i]))
+
+                for key, value in sorted(dicto.items(),
+                                         key=lambda x: (-x[1], x[0])):
+                    print('{}: {}'.format(key, value))
