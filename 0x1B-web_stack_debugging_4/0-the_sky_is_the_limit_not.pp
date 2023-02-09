@@ -1,10 +1,6 @@
 # Fix the nginx requests limit
-exec { 'upgrade':
-  path    => '/bin/',
-  command => 'sed -i "s/15/4096" /etc/default/nginx',
-}
-
-exec { 'restart':
-  path    => '/usr/bin/',
-  command => 'service nginx restart',
+#change ULIMIT
+exec { 'Change ULIMIT':
+  command  => 'echo "ULIMIT=\"-n 25000\"" > /etc/default/nginx && sudo service nginx restart',
+  provider => shell,
 }
